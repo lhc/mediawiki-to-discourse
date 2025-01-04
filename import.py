@@ -6,6 +6,7 @@ import plumbum
 import requests
 import os
 import time
+import functools
 
 if False:
     import logging
@@ -25,6 +26,7 @@ ns = {
 
 API_KEY = 'gera isso aqui no painel de admin do discourse!'
 
+@functools.lru_cache
 def upload_image(name, data):
     local = os.path.join('images', name)
     with open(local, 'wb') as f:
@@ -52,6 +54,20 @@ def upload_image(name, data):
 
     return r.json()['short_url']
 
+@functools.lru_cache
+def fetch_image(name):
+    url = f'https://lhc.net.br/w/index.php?title=Especial:Redirecionar/file&wpvalue={nome}'
+    r = requests.get(url)
+    if r.status_code != 200:
+        print(f'Nao consegui pegar a imagem {nome}, {r} (ou não era imagem :P)')
+        return None
+
+    print(f'Obti imagem do Wiki, fazendo upload no Discourse: {nome}')
+    short_url = upload_image(nome, r.content)
+    print(f'   ... feito upload para {short_url}')
+
+    return short_url
+
 def convert_to_html(wikitext):
     pd = pandoc.read(source=wikitext, format='mediawiki')
 
@@ -59,14 +75,7 @@ def convert_to_html(wikitext):
         if isinstance(elt, (pandoc.types.Link, pandoc.types.Image)):
             nome = elt[2][0]
 
-            url = f'https://lhc.net.br/w/index.php?title=Especial:Redirecionar/file&wpvalue={nome}'
-            r = requests.get(url)
-            if r.status_code != 200:
-                print(f'Nao consegui pegar a imagem {nome}, {r} (ou não era imagem :P)')
-            else:
-                print(f'Obti imagem do Wiki, fazendo upload no Discourse: {nome}')
-                short_url = upload_image(nome, r.content)
-                print(f'   ... feito upload para {short_url}')
+            if short_url := fetch_image(nome):
                 elt.__class__ = pandoc.types.Image                
                 elt[2] = (short_url, elt[2][1])
 
