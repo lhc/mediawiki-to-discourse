@@ -45,7 +45,7 @@ if __name__ == '__main__':
       f.write(f'''<html>
 <h1>Redirecionamento automático</h1>
 <script>
-document.top.href = 'https://discourse.lhc.net.br/t/{id}';
+window.location = 'https://discourse.lhc.net.br/t/{id}';
 </script>
 <meta charset="UTF-8">
 <meta http-equiv="refresh" content="0; url=https://discourse.lhc.net.br/t/{id}">
@@ -66,7 +66,7 @@ function get_url_to_redir() {{
   return '/index.html';
 }}
 
-document.top.href = get_url_to_redir();
+window.location = get_url_to_redir();
 </script>
 <meta charset="UTF-8">
 <noscript>
