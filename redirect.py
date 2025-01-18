@@ -22,7 +22,7 @@ def topics():
       yield topic['id'], topic['title']
 
 def mk_js_redir(id, title):
-  return f'''if (title === '{title}') return 'https://discourse.lhc.net.br/t/{id}';'''
+  return f''''{title}': {id}'''
 
 def mk_manual_redir(id, title):
   return f'''<li><a href="https://discourse.lhc.net.br/t/{id}">{title}</a></li>'''
@@ -52,7 +52,7 @@ window.location = 'https://discourse.lhc.net.br/t/{id}';
 <a href="https://discourse.lhc.net.br/t/{id}">Prosseguir para {title} no Discourse manualmente</a>
 ''')
 
-  auto_redir_js = '\n  '.join(auto_redir_js)
+  auto_redir_js = ',\n    '.join(auto_redir_js)
   manual_redir = '\n'.join(manual_redir)
   with open(f'redirect/index.html', 'w') as f:
     f.write(f'''<html>
@@ -61,9 +61,11 @@ window.location = 'https://discourse.lhc.net.br/t/{id}';
 
 function get_url_to_redir() {{
   const urlParams = new URLSearchParams(window.location.search);
-  const title = urlParams.get('title');
-  {auto_redir_js}
-  return '/index.html';
+  const redirTable = {{
+    {auto_redir_js}
+  }};
+  const out = redirTable[urlParams.get('title')];
+  return out === undefined ? '/index.html' : 'https://discourse.lhc.net.br/t/' + out;
 }}
 
 window.location = get_url_to_redir();
